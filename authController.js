@@ -57,10 +57,12 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    // توليد كود عشوائي
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
     user.resetCode = resetCode;
     await user.save();
 
+    // إعداد الإيميل
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -90,23 +92,26 @@ exports.verifyResetCode = async (req, res) => {
     if (!user || user.resetCode !== code) {
       return res.status(400).json({ message: "Invalid code" });
     }
+
+    // نمسح الكود بعد التحقق
+    user.resetCode = undefined;
+    await user.save();
+
     res.json({ message: "Code verified successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
 // Reset Password
 exports.resetPassword = async (req, res) => {
   try {
-    const { email, code, newPassword } = req.body;
+    const {email,newPassword} = req.body;
     const user = await User.findOne({ email });
-    if (!user || user.resetCode !== code) {
-      return res.status(400).json({ message: "Invalid code" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
-    user.resetCode = undefined;
     await user.save();
 
     res.json({ message: "Password reset successful" });

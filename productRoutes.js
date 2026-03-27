@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const productController = require("../controllers/productController");
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
 const multer = require("multer");
 
 // إعداد مكان تخزين الصور
@@ -15,14 +17,18 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// إضافة منتج مع عدة صور
-router.post("/", upload.array("images", 5), productController.createProduct); 
-// ممكن تحددي عدد الصور (مثلاً 5)
+// Routes
+// عرض المنتجات → أي يوزر يقدر يشوف
+router.get("/", authMiddleware, productController.getProducts);
 
-// باقي الـ CRUD
-router.get("/", productController.getProducts);
-router.put("/:id", upload.array("images", 5), productController.updateProduct);
-router.delete("/:id", productController.deleteProduct);
+// إضافة منتج → أدمن فقط
+router.post("/", authMiddleware, adminMiddleware, upload.array("images", 5), productController.createProduct);
+
+// تعديل منتج → أدمن فقط
+router.put("/:id", authMiddleware, adminMiddleware, upload.array("images", 5), productController.updateProduct);
+
+// حذف منتج → أدمن فقط
+router.delete("/:id", authMiddleware, adminMiddleware, productController.deleteProduct);
 
 module.exports = router;
 

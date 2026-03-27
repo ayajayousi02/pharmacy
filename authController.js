@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
 // Signup
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -15,7 +15,7 @@ exports.signup = async (req, res) => {
     if (existingUser) return res.status(400).json({ message: "Email already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hashedPassword });
+    const user = await User.create({ name, email, password: hashedPassword, role });
 
     res.status(201).json({ message: "User created successfully", user });
   } catch (error) {
@@ -37,9 +37,9 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    // التوكن فيه معلومات إضافية
+    // التوكن فيه معلومات إضافية (role)
     const token = jwt.sign(
-      { id: user._id, name: user.name, email: user.email },
+      { id: user._id, name: user.name, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -102,10 +102,11 @@ exports.verifyResetCode = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 // Reset Password
 exports.resetPassword = async (req, res) => {
   try {
-    const {email,newPassword} = req.body;
+    const { email, newPassword } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -119,3 +120,5 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+ 
+     

@@ -1,6 +1,6 @@
 const Product = require("../models/Product");
 
-// إضافة منتج جديد
+// إضافة منتج جديد (أدمن فقط)
 exports.createProduct = async (req, res) => {
   try {
     const productData = {
@@ -9,13 +9,13 @@ exports.createProduct = async (req, res) => {
     };
     const product = new Product(productData);
     await product.save();
-    res.status(201).json(product);
+    res.status(201).json({ message: "Product created successfully", product });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
 
-// تحديث منتج
+// تحديث منتج (أدمن فقط)
 exports.updateProduct = async (req, res) => {
   try {
     const updateData = {
@@ -23,13 +23,14 @@ exports.updateProduct = async (req, res) => {
       images: req.files ? req.files.map(file => file.path) : undefined
     };
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    res.json(product);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.json({ message: "Product updated successfully", product });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
 
-// جلب كل المنتجات
+// جلب كل المنتجات (يوزر وأدمن)
 exports.getProducts = async (req, res) => {
   try {
     const products = await Product.find().populate("category");
@@ -39,13 +40,13 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// حذف منتج
+// حذف منتج (أدمن فقط)
 exports.deleteProduct = async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.id);
-    res.json({ message: "Product deleted" });
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.json({ message: "Product deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-

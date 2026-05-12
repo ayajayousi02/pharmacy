@@ -1,34 +1,48 @@
 const express = require("express");
 const router = express.Router();
+
 const productController = require("../controllers/productController");
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
-const multer = require("multer");
 
-// إعداد مكان تخزين الصور
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
-});
 
-const upload = multer({ storage: storage });
-
-// Routes
-// عرض المنتجات → أي يوزر يقدر يشوف
+// عرض كل المنتجات
 router.get("/", authMiddleware, productController.getProducts);
 
-// إضافة منتج → أدمن فقط
-router.post("/", authMiddleware, adminMiddleware, upload.array("images", 5), productController.createProduct);
 
-// تعديل منتج → أدمن فقط
-router.put("/:id", authMiddleware, adminMiddleware, upload.array("images", 5), productController.updateProduct);
+// إضافة منتج واحد
+router.post(
+  "/",
+  authMiddleware,
+  adminMiddleware,
+  productController.createProduct
+);
 
-// حذف منتج → أدمن فقط
-router.delete("/:id", authMiddleware, adminMiddleware, productController.deleteProduct);
+
+// إدخال كل المنتجات من JSON
+router.post(
+  "/bulk",
+  authMiddleware,
+  adminMiddleware,
+  productController.bulkInsertProducts
+);
+
+
+// تعديل منتج
+router.put(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  productController.updateProduct
+);
+
+
+// حذف منتج
+router.delete(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  productController.deleteProduct
+);
 
 module.exports = router;
-
